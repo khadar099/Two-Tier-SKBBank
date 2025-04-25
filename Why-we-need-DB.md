@@ -1,4 +1,4 @@
-When a Database is Needed:
+***When a Database is Needed:***
 
 User registration/login – store usernames, passwords (hashed), etc.
 
@@ -10,7 +10,7 @@ Audit logs – keep track of what users did and when.
 
 Reports – generate statements, summaries, etc.
 
-#When a Database Might Not Be Needed:
+***When a Database Might Not Be Needed:***
 
 If it’s a purely demo app with no persistence at all.
 
