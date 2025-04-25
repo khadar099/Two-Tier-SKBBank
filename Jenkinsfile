@@ -52,7 +52,7 @@ pipeline {
         stage('deploy docker image') {
             steps {
                  sh '''
-                 docker ps -q -f name=shopping-container && docker stop skbbank-container && docker rm shopping-container || echo "Container not found or already stopped."
+                 docker ps -q -f name=skbbank-container && docker stop skbbank-container && docker rm skbbank-container || echo "skbbank-container Container not found or already stopped."
                  docker run -d -p 8082:8082 --name skbbank-container khadar3099/skbbank:v.$BUILD_NUMBER
                  '''
             }
