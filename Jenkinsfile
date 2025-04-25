@@ -27,12 +27,12 @@ pipeline {
         }
         stage('Docker image  build stage') {
             steps {
-                sh 'docker image build -t SKBbank:v.$BUILD_NUMBER .'
+                sh 'docker image build -t skbbank:v.$BUILD_NUMBER .'
             }
         }
         stage('Tag docker image') {
             steps {
-                sh 'docker image tag SKBbank:v.$BUILD_NUMBER khadar3099/SKBbank:v.$BUILD_NUMBER'
+                sh 'docker image tag skbbank:v.$BUILD_NUMBER khadar3099/skbbank:v.$BUILD_NUMBER'
                 }
         }
        stage ('push docker image to  dockerhub') {
@@ -41,9 +41,9 @@ pipeline {
                    withCredentials([string(credentialsId: 'dockerhub-password', variable: 'dockerhub_psd')]) {
                         sh '''
                         docker login -u khadar3099 -p ${dockerhub_psd}
-                        docker image push khadar3099/SKBbank:v.$BUILD_NUMBER
-                        docker rmi SKBbank:v.$BUILD_NUMBER
-                        docker rmi khadar3099/SKBbank:v.$BUILD_NUMBER
+                        docker image push khadar3099/skbbank:v.$BUILD_NUMBER
+                        docker rmi skbbank:v.$BUILD_NUMBER
+                        docker rmi khadar3099/skbbank:v.$BUILD_NUMBER
                         ''' 
                         }
                     }
@@ -52,8 +52,8 @@ pipeline {
         stage('deploy docker image') {
             steps {
                  sh '''
-                 docker ps -q -f name=shopping-container && docker stop SKBBank-container && docker rm shopping-container || echo "Container not found or already stopped."
-                 docker run -d -p 9191:8181 --name SKBBank-container khadar3099/SKBbank:v.$BUILD_NUMBER
+                 docker ps -q -f name=shopping-container && docker stop skbbank-container && docker rm shopping-container || echo "Container not found or already stopped."
+                 docker run -d -p 9191:8181 --name skbbank-container khadar3099/skbbank:v.$BUILD_NUMBER
                  '''
             }
         }
