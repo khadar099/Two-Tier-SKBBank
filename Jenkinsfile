@@ -57,5 +57,21 @@ pipeline {
                  '''
             }
         }
+        post {
+        success {
+            emailext(
+                subject: "SUCCESS: Job '${env.JOB_NAME} [#${env.BUILD_NUMBER}]'",
+                body: "Good news! The build was successful.\n\nCheck it here: ${env.BUILD_URL}",
+                to: 'your_email@example.com'
+            )
+        }
+        failure {
+            emailext(
+                subject: "FAILURE: Job '${env.JOB_NAME} [#${env.BUILD_NUMBER}]'",
+                body: "Unfortunately, the build failed.\n\nCheck details here: ${env.BUILD_URL}",
+                to: 'your_email@example.com'
+            )
+            }
+        }
     }
 }
