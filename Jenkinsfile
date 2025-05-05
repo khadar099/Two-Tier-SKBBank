@@ -62,7 +62,7 @@ pipeline {
                 aws eks update-kubeconfig --region ap-south-1 --name demo-cluster1
             """
 
-            // 🔧 Proper image tag replacement using Groovy interpolation
+            // Proper image tag replacement using Groovy interpolation
             sh "sed -i 's|image: khadar3099/skbbank:.*|image: khadar3099/skbbank:v.${BUILD_NUMBER}|g' skbbank-deployment.yml"
 
             sh """
@@ -73,4 +73,5 @@ pipeline {
                 }
             }
     }
+}
 }
