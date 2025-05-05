@@ -49,12 +49,26 @@ pipeline {
                     }
                 }
             }
-        stage('deploy docker image') {
+        stage('Deploy to EKS') {
             steps {
-                 sh '''
-                 docker ps -q -f name=skbbank-container && docker stop skbbank-container && docker rm skbbank-container || echo "skbbank-container Container not found or already stopped."
-                 docker run -d -p 8082:8082 --name skbbank-container khadar3099/skbbank:v.$BUILD_NUMBER
-                 '''
+                withCredentials([
+                    string(credentialsId: 'aws-access-key-id', variable: 'AKIAYHJANHJNFIM7GF7O'),
+                    string(credentialsId: 'aws-secret-access-key', variable: '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')
+                ]) {
+                    sh '''
+                    echo "Configuring AWS CLI..."
+                    aws configure set aws_access_key_id AKIAYHJANHJNFIM7GF7O
+                    aws configure set aws_secret_access_key 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
+                    aws configure set region ap-south-1
+
+                    echo "Setting up kubectl for EKS..."
+                    aws eks update-kubeconfig --region ap-south-1 --name demo-cluster1
+
+                    echo "Applying Kubernetes manifests..."
+                    kubectl apply -f deployment.yaml
+                    kubectl apply -f service.yaml
+                    '''
+                }
             }
         }
     }
