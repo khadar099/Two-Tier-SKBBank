@@ -16,6 +16,6 @@ spec:
     spec:
       containers:
       - name: shopping-container
-        image: khadar099/shopping:v.1
+        image: khadar3099/skbbank:v.8
         ports:
         - containerPort: 8082
