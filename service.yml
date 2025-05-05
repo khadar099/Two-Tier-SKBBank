@@ -8,6 +8,6 @@ spec:
     app: shopping
   ports:
     - protocol: TCP
-      port: 80
+      port: 8082
       targetPort: 8082
       nodePort: 30036  # You can choose any port in the range 30000-32767
