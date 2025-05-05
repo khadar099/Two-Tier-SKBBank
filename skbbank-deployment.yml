@@ -16,6 +16,6 @@ spec:
     spec:
       containers:
       - name: skbbank-container
-        image: khadar3099/skbbank:v.8
+        image: khadar3099/skbbank:v.20
         ports:
         - containerPort: 8082
