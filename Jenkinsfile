@@ -55,14 +55,14 @@ pipeline {
                 echo "Configuring AWS CLI..."
                 aws configure set aws_access_key_id AKIAYHJANHJNFIM7GF7O
                 aws configure set aws_secret_access_key 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
-                aws configure set region us-east-1
+                aws configure set region ap-south-1
 
                 echo "Setting up kubectl for EKS..."
-                aws eks update-kubeconfig --region us-east-1 --name your-cluster-name
+                aws eks update-kubeconfig --region ap-south-1 --name demo-cluster1
 
                 echo "Applying Kubernetes manifests..."
-                kubectl apply -f k8s/deployment.yaml
-                kubectl apply -f k8s/service.yaml
+                kubectl apply -f deployment.yaml
+                kubectl apply -f service.yaml
                 '''
                 }
             }
