@@ -1,21 +1,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: shopping-deployment
+  name: skbbank-deployment
   labels:
-    app: shopping
+    app: skbbank
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: shopping
+      app: skbbank
   template:
     metadata:
       labels:
-        app: shopping
+        app: skbbank
     spec:
       containers:
-      - name: shopping-container
+      - name: skbbank-container
         image: khadar3099/skbbank:v.8
         ports:
         - containerPort: 8082
