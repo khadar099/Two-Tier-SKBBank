@@ -61,8 +61,8 @@ pipeline {
                 aws eks update-kubeconfig --region ap-south-1 --name demo-cluster1
 
                 echo "Applying Kubernetes manifests..."
-                kubectl apply -f deployment.yaml
-                kubectl apply -f service.yaml
+                kubectl apply -f deployment.yml
+                kubectl apply -f service.yml
                 '''
                 }
             }
