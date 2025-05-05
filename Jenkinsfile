@@ -51,7 +51,8 @@ pipeline {
             }
         stage('Deploy to EKS') {
              steps {
-                sh '''
+                script {
+            sh """
                 echo "Configuring AWS CLI..."
                 aws configure set aws_access_key_id AKIAYHJANHJNFIM7GF7O
                 aws configure set aws_secret_access_key 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
@@ -59,15 +60,16 @@ pipeline {
 
                 echo "Setting up kubectl for EKS..."
                 aws eks update-kubeconfig --region ap-south-1 --name demo-cluster1
-                echo "Updating deployment file with latest image tag..."
-                # This line finds the current Docker image in the YAML file and replaces it
-                # with the one matching the current build number.
-                sed -i 's|image: khadar3099/skbbank:.*|image: khadar3099/skbbank:v.${BUILD_NUMBER}|g' skbbank-deployment.yml
+            """
 
+            // 🔧 Proper image tag replacement using Groovy interpolation
+            sh "sed -i 's|image: khadar3099/skbbank:.*|image: khadar3099/skbbank:v.${BUILD_NUMBER}|g' skbbank-deployment.yml"
+
+            sh """
                 echo "Applying Kubernetes manifests..."
                 kubectl apply -f skbbank-deployment.yml
                 kubectl apply -f skbbank-service.yml
-                '''
+            """
                 }
             }
     }
