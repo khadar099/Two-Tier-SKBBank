@@ -6,23 +6,17 @@
     <style>
         body {
             font-family: 'Arial', sans-serif;
-            background: linear-gradient(to right, #000000, #ffd700);
-            color: #ffffff;
+            background-color: #ffffff;
+            color: #000000;
             margin: 0;
             padding: 0;
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
-            justify-content: center;
-            align-items: center;
             flex-direction: column;
         }
 
         .navbar-custom {
-            background-color: rgba(0, 0, 0, 0.7);
-            position: fixed;
-            top: 0;
-            width: 100%;
-            z-index: 1000;
+            background-color: #343a40;
         }
 
         .navbar-custom a {
@@ -35,7 +29,8 @@
 
         .dashboard-container {
             max-width: 1000px;
-            margin-top: 50px;
+            margin-top: 80px;
+            margin-bottom: 40px;
             text-align: center;
         }
 
@@ -44,14 +39,14 @@
         }
 
         .btn-primary {
-            background-color: #000000;
+            background-color: #007bff;
             border: none;
             transition: background-color 0.3s ease;
         }
 
         .btn-primary:hover {
-            background-color: #ffd700;
-            color: #000;
+            background-color: #0056b3;
+            color: #fff;
         }
 
         .btn-success {
@@ -64,26 +59,26 @@
         }
 
         .form-container {
-            background-color: rgba(255, 255, 255, 0.1);
+            background-color: #f8f9fa;
             padding: 15px;
             border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
         }
 
         .account-details {
-            background-color: rgba(255, 255, 255, 0.1);
+            background-color: #f8f9fa;
             padding: 20px;
             border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
             margin-bottom: 20px;
         }
 
         .error {
-            color: #ff4c4c;
+            color: #dc3545;
         }
 
         .footer {
-            background-color: rgba(0, 0, 0, 0.7);
+            background-color: #343a40;
             color: white;
             padding: 15px 0;
             font-size: 14px;
@@ -115,7 +110,7 @@
     </style>
 </head>
 <body>
-<nav class="navbar navbar-expand-lg navbar-custom">
+<nav class="navbar navbar-expand-lg navbar-custom fixed-top">
     <a class="navbar-brand" href="#">SKB Bank</a>
     <ul class="navbar-nav ml-auto">
         <li class="nav-item"><a class="nav-link" href="/dashboard">Dashboard</a></li>
@@ -130,15 +125,14 @@
         <h3 th:text="'Current Balance: $' + ${account.balance}"></h3>
     </div>
 
-    <!-- Account Details Section -->
     <div class="account-details">
         <h4>Account Details</h4>
-        <p><strong>Account Number:</strong> <span th:text="${account.id}"></span></p> <!-- Use account.id for account number -->
+        <p><strong>Account Number:</strong> <span th:text="${account.id}"></span></p>
         <p><strong>Account Type:</strong> Savings</p>
     </div>
 
     <div class="row justify-content-center">
-        <!-- Deposit Section -->
+        <!-- Deposit -->
         <div class="col-md-3">
             <button class="btn btn-block btn-primary" type="button" data-toggle="collapse" data-target="#depositForm" aria-expanded="false" aria-controls="depositForm">
                 Deposit
@@ -154,7 +148,7 @@
             </div>
         </div>
 
-        <!-- Withdraw Section -->
+        <!-- Withdraw -->
         <div class="col-md-3">
             <button class="btn btn-block btn-primary" type="button" data-toggle="collapse" data-target="#withdrawForm" aria-expanded="false" aria-controls="withdrawForm">
                 Withdraw
@@ -170,7 +164,7 @@
             </div>
         </div>
 
-        <!-- Transfer Section -->
+        <!-- Transfer -->
         <div class="col-md-3">
             <button class="btn btn-block btn-primary" type="button" data-toggle="collapse" data-target="#transferForm" aria-expanded="false" aria-controls="transferForm">
                 Transfer Money
@@ -192,6 +186,10 @@
     </div>
 
     <p th:if="${error != null}" th:text="${error}" class="error text-center mt-3"></p>
+</div>
+
+<div class="footer">
+    &copy; 2025 SKB Bank. All rights reserved. | <a href="/privacy">Privacy Policy</a>
 </div>
 
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
