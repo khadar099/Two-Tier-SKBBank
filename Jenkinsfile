@@ -50,28 +50,30 @@ pipeline {
                 }
             }
         stage('Deploy to EKS') {
-             steps {
-                script {
-            sh """
-                echo "Configuring AWS CLI..."
-                aws configure set aws_access_key_id AKIAYHJANHJNFIM7GF7O
-                aws configure set aws_secret_access_key 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
-                aws configure set region ap-south-1
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'aws-credentials', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                    script {
+                sh """
+                    echo "Configuring AWS CLI..."
+                    aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+                    aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+                    aws configure set region ap-south-1
 
-                echo "Setting up kubectl for EKS..."
-                aws eks update-kubeconfig --region ap-south-1 --name demo-cluster1
-            """
+                    echo "Setting up kubectl for EKS..."
+                    aws eks update-kubeconfig --region ap-south-1 --name demo-cluster1
+                """
 
-            // Proper image tag replacement using Groovy interpolation
-            sh "sed -i 's|image: khadar3099/skbbank:.*|image: khadar3099/skbbank:v.${BUILD_NUMBER}|g' skbbank-deployment.yml"
+                // Replace image tag dynamically
+                sh "sed -i 's|image: khadar3099/skbbank:.*|image: khadar3099/skbbank:v.${BUILD_NUMBER}|g' skbbank-deployment.yml"
 
-            sh """
-                echo "Applying Kubernetes manifests..."
-                kubectl apply -f skbbank-deployment.yml
-                kubectl apply -f skbbank-service.yml
-            """
-                }
+                sh """
+                    echo "Applying Kubernetes manifests..."
+                    kubectl apply -f skbbank-deployment.yml
+                    kubectl apply -f skbbank-service.yml
+                """
             }
+        }
+    }
     }
 }
 }
