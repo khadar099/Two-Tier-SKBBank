@@ -2,18 +2,20 @@ package com.example.bankapp.controller;
 
 import com.example.bankapp.model.Account;
 import com.example.bankapp.service.AccountService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 
 @Controller
 public class BankController {
+
+    private static final Logger logger = LoggerFactory.getLogger(BankController.class);
 
     @Autowired
     private AccountService accountService;
@@ -22,6 +24,7 @@ public class BankController {
     public String dashboard(Model model) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         Account account = accountService.findAccountByUsername(username);
+        logger.info("Accessed dashboard for user: {}", username);
         model.addAttribute("account", account);
         return "dashboard";
     }
@@ -35,8 +38,10 @@ public class BankController {
     public String registerAccount(@RequestParam String username, @RequestParam String password, Model model) {
         try {
             accountService.registerAccount(username, password);
+            logger.info("User registered: {}", username);
             return "redirect:/login";
         } catch (RuntimeException e) {
+            logger.error("Registration failed for user {}: {}", username, e.getMessage());
             model.addAttribute("error", e.getMessage());
             return "register";
         }
@@ -52,6 +57,7 @@ public class BankController {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         Account account = accountService.findAccountByUsername(username);
         accountService.deposit(account, amount);
+        logger.info("User {} deposited amount {}", username, amount);
         return "redirect:/dashboard";
     }
 
@@ -62,7 +68,9 @@ public class BankController {
 
         try {
             accountService.withdraw(account, amount);
+            logger.info("User {} withdrew amount {}", username, amount);
         } catch (RuntimeException e) {
+            logger.warn("Withdrawal failed for user {}: {}", username, e.getMessage());
             model.addAttribute("error", e.getMessage());
             model.addAttribute("account", account);
             return "dashboard";
@@ -76,6 +84,7 @@ public class BankController {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         Account account = accountService.findAccountByUsername(username);
         model.addAttribute("transactions", accountService.getTransactionHistory(account));
+        logger.info("User {} viewed transaction history", username);
         return "transactions";
     }
 
@@ -86,7 +95,9 @@ public class BankController {
 
         try {
             accountService.transferAmount(fromAccount, toUsername, amount);
+            logger.info("User {} transferred amount {} to {}", username, amount, toUsername);
         } catch (RuntimeException e) {
+            logger.warn("Transfer failed from {} to {}: {}", username, toUsername, e.getMessage());
             model.addAttribute("error", e.getMessage());
             model.addAttribute("account", fromAccount);
             return "dashboard";
@@ -94,5 +105,4 @@ public class BankController {
 
         return "redirect:/dashboard";
     }
-
 }
