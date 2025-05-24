@@ -1,0 +1,60 @@
+***So if you use 'root'@'localhost'...***
+That user only works when connecting via Unix socket, from the local machine.
+
+If you want to access MySQL remotely (from another machine or your local PC), you must:
+
+Create or allow 'root'@'%' or 'root'@'13.127.72.112'
+This tells MySQL:
+
+"Allow root to connect from any host (%) or a specific IP."
+
+Example:
+
+CREATE USER 'root'@'%' IDENTIFIED BY 'Root@123';
+GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION;
+FLUSH PRIVILEGES;
+
+SHOW DATABASES;
+
+command to list all users
+-------------------------
+SELECT User, Host FROM mysql.user;
+
+Command to remove or drop user
+------------------------------
+DROP USER 'root'@'localhost';
+FLUSH PRIVILEGES;
+
+####Check MySQL config####
+--------------------------
+Edit /etc/mysql/mysql.conf.d/mysqld.cnf (or /etc/mysql/my.cnf depending on your distro)
+
+Look for:
+bind-address = 127.0.0.1
+Change it to: 
+bind-address = 0.0.0.0
+  
+Save and restart MySQL
+---------------------
+sudo systemctl restart mysql
+
+if you want to check if root or user or any user has access to db (bankapp)
+---------------------------------------------------------------------------
+
+
+Summary: When to Use What
+Host Value	Used When
+'localhost'	Connecting from same server using socket
+'127.0.0.1'	Connecting from same server over TCP
+'%'	Allow from any remote IP (less secure)
+'10.0.0.5'	Allow only from that specific IP (more secure)
+
+
+First install mysql 
+set root password 
+make sure root has all permissions and is able to access bankapp database
+
+to set root passwoord
+----------------------
+ALTER USER 'root'@'13.127.72.112' IDENTIFIED BY 'Root@123';
+FLUSH PRIVILEGES;
