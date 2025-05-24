@@ -3,7 +3,7 @@ Update your application.properties with log file path and log level settings:
 
 # Logging Configuration
 logging.level.root=INFO
-logging.level.com.yourpackage=DEBUG  # Replace with your base package like com.bankapp
+logging.level.com.example.bankapp=DEBUG  # Replace with your base package like com.bankapp
 logging.file.name=/var/log/bankapp/bankapp.log
 Note: Make sure /var/log/bankapp/ exists and is writable by the user running the app:
 
