@@ -3,4 +3,4 @@ EXPOSE 8082
 ENV APP_HOME /usr/src/app
 WORKDIR $APP_HOME
 COPY target/*.jar $APP_HOME/app.jar
-CMD ["java", "-jar", "app.jar"]
+CMD ["java", "-jar", "/usr/src/app/app.jar"]
