@@ -39,6 +39,6 @@
     </root>
 
     <!-- Log your package at DEBUG level -->
-    <logger name="com.yourcompany.bankapp" level="DEBUG"/>
+    <logger name=":com.example.bankapp" level="DEBUG"/>
 
 </configuration>
