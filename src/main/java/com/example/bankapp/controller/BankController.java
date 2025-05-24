@@ -38,7 +38,7 @@ public class BankController {
     public String registerAccount(@RequestParam String username, @RequestParam String password, Model model) {
         try {
             accountService.registerAccount(username, password);
-            logger.info("New user registered: [{}]", username);
+            logger.info("New user [{}] registered successfully", username);
             return "redirect:/login";
         } catch (RuntimeException e) {
             logger.error("Registration failed for user [{}]: {}", username, e.getMessage());
@@ -53,11 +53,18 @@ public class BankController {
     }
 
     @PostMapping("/deposit")
-    public String deposit(@RequestParam BigDecimal amount) {
+    public String deposit(@RequestParam BigDecimal amount, Model model) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         Account account = accountService.findAccountByUsername(username);
-        accountService.deposit(account, amount);
-        logger.info("User [{}] deposited [{}]", username, amount);
+
+        try {
+            accountService.deposit(account, amount);
+            logger.info("User [{}] deposited amount {}", username, amount);
+        } catch (RuntimeException e) {
+            logger.error("Deposit failed for user [{}]: {}", username, e.getMessage());
+            model.addAttribute("error", "Deposit failed: " + e.getMessage());
+        }
+
         return "redirect:/dashboard";
     }
 
@@ -68,7 +75,7 @@ public class BankController {
 
         try {
             accountService.withdraw(account, amount);
-            logger.info("User [{}] withdrew [{}]", username, amount);
+            logger.info("User [{}] withdrew amount {}", username, amount);
         } catch (RuntimeException e) {
             logger.warn("Withdrawal failed for user [{}]: {}", username, e.getMessage());
             model.addAttribute("error", e.getMessage());
@@ -84,7 +91,7 @@ public class BankController {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         Account account = accountService.findAccountByUsername(username);
         model.addAttribute("transactions", accountService.getTransactionHistory(account));
-        logger.info("User [{}] viewed transaction history", username);
+        logger.info("User [{}] accessed transaction history", username);
         return "transactions";
     }
 
@@ -95,9 +102,9 @@ public class BankController {
 
         try {
             accountService.transferAmount(fromAccount, toUsername, amount);
-            logger.info("User [{}] transferred [{}] to [{}]", username, amount, toUsername);
+            logger.info("User [{}] transferred amount {} to [{}]", username, amount, toUsername);
         } catch (RuntimeException e) {
-            logger.warn("Transfer failed for user [{}] to [{}]: {}", username, toUsername, e.getMessage());
+            logger.warn("Transfer failed from [{}] to [{}]: {}", username, toUsername, e.getMessage());
             model.addAttribute("error", e.getMessage());
             model.addAttribute("account", fromAccount);
             return "dashboard";
