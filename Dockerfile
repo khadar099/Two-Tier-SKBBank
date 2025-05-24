@@ -11,4 +11,4 @@ WORKDIR $APP_HOME
 # Create logs directory with proper permissions
 RUN mkdir -p /usr/src/app/logs && chmod 755 /usr/src/app/logs
 
-CMD ["java", "-jar", "app.jar"]
+CMD ["java", "-Dlogging.config=classpath:logback-spring.xml", "-jar", "app.jar"]
