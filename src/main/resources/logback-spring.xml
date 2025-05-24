@@ -2,7 +2,7 @@
 <configuration scan="true">
 
     <!-- Define a property for the log file path -->
-    <property name="LOG_PATH" value="logs" />
+    <property name="LOG_PATH" value="/app/logs" />
     <property name="LOG_FILE" value="${LOG_PATH}/bankapp.log" />
 
     <!-- Console appender (optional) -->
