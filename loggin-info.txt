@@ -36,19 +36,16 @@ Edit
 </configuration>
 This gives your logs a clean and structured format which is easier for Logstash to parse.
 
-✅ Step 3: Restart Your Spring Boot Application
-bash
-Copy
-Edit
+Step 3: Restart Your Spring Boot Application
+
 ./mvnw clean package
 java -jar target/your-app.jar
 Ensure logs are being written to:
 
-bash
-Copy
-Edit
+
 tail -f /var/log/bankapp/bankapp.log
-✅ Step 4: Proceed to Filebeat + Logstash Setup
+
+Step 4: Proceed to Filebeat + Logstash Setup
 Now that your app is writing logs to /var/log/bankapp/bankapp.log, proceed to:
 
 Install Filebeat on the same server
