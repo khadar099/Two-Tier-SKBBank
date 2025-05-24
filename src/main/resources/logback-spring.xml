@@ -1,39 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration scan="true">
 
-    <!-- Define a property for the log file path -->
+    <!-- Define property for log path -->
     <property name="LOG_PATH" value="/usr/src/app/logs" />
-    <property name="LOG_FILE" value="${LOG_PATH}/bankapp.log" />
+    <property name="LOG_FILE" value="${LOG_PATH}/bankapp-json.log" />
 
-    <!-- Console appender (optional) -->
+    <!-- Console appender (optional, for dev/debug) -->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <pattern>%d{yyyy-MM-dd HH:mm:ss} %-5level [%thread] %logger{36} - %msg%n</pattern>
         </encoder>
     </appender>
 
-    <!-- Rolling file appender -->
-    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${LOG_FILE}</file>
-
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${LOG_PATH}/bankapp-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
-            <timeBasedFileNamingAndTriggeringPolicy
-                class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
-                <maxFileSize>10MB</maxFileSize>
-            </timeBasedFileNamingAndTriggeringPolicy>
-            <maxHistory>30</maxHistory>
-            <totalSizeCap>1GB</totalSizeCap>
-        </rollingPolicy>
-
-        <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss} %-5level [%thread] %logger{36} - %msg%n</pattern>
-        </encoder>
-    </appender>
-
-    <!-- Logstash appender (structured JSON logs) -->
+    <!-- JSON Rolling file appender -->
     <appender name="LOGSTASH" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${LOG_PATH}/bankapp-json.log</file>
+        <file>${LOG_FILE}</file>
 
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <fileNamePattern>${LOG_PATH}/bankapp-json-%d{yyyy-MM-dd}.log</fileNamePattern>
@@ -44,14 +25,16 @@
         <encoder class="net.logstash.logback.encoder.LogstashEncoder" />
     </appender>
 
-    <!-- Log root level -->
+    <!-- Logger for your application package -->
+    <logger name="com.example.bankapp" level="DEBUG" additivity="false">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="LOGSTASH"/>
+    </logger>
+
+    <!-- Root logger -->
     <root level="INFO">
         <appender-ref ref="CONSOLE"/>
-        <appender-ref ref="FILE"/>
         <appender-ref ref="LOGSTASH"/>
     </root>
-
-    <!-- Log your package at DEBUG level -->
-    <logger name="com.example.bankapp" level="DEBUG"/>
 
 </configuration>
