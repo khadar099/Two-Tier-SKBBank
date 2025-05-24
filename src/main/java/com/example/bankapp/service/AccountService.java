@@ -1,79 +1,135 @@
-package com.example.bankapp.controller;
+package com.example.bankapp.service;
 
+import com.example.bankapp.exception.AccountNotFoundException;
+import com.example.bankapp.exception.InsufficientFundsException;
+import com.example.bankapp.exception.UsernameAlreadyExistsException;
 import com.example.bankapp.model.Account;
 import com.example.bankapp.model.Transaction;
-import com.example.bankapp.service.AccountService;
+import com.example.bankapp.repository.AccountRepository;
+import com.example.bankapp.repository.TransactionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
-@RestController
-@RequestMapping("/api")
-public class BankController {
+@Service
+public class AccountService implements UserDetailsService {
 
     @Autowired
-    private AccountService accountService;
+    PasswordEncoder passwordEncoder;
 
-    @GetMapping("/dashboard")
-    public ResponseEntity<Account> dashboard() {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        Account account = accountService.findAccountByUsername(username);
-        return ResponseEntity.ok(account);
+    @Autowired
+    private AccountRepository accountRepository;
+
+    @Autowired
+    private TransactionRepository transactionRepository;
+
+    public Account findAccountByUsername(String username) {
+        return accountRepository.findByUsername(username)
+                .orElseThrow(() -> new AccountNotFoundException("Account not found for username: " + username));
     }
 
-    @PostMapping("/register")
-    public ResponseEntity<String> registerAccount(@RequestParam String username, @RequestParam String password) {
-        try {
-            accountService.registerAccount(username, password);
-            return ResponseEntity.ok("Account registered successfully");
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+    public Account registerAccount(String username, String password) {
+        if (accountRepository.findByUsername(username).isPresent()) {
+            throw new UsernameAlreadyExistsException("Username already exists: " + username);
         }
+
+        Account account = new Account();
+        account.setUsername(username);
+        account.setPassword(passwordEncoder.encode(password)); // Encrypt password
+        account.setBalance(BigDecimal.ZERO); // Initial balance set to 0
+        return accountRepository.save(account);
     }
 
-    @PostMapping("/deposit")
-    public ResponseEntity<String> deposit(@RequestParam BigDecimal amount) {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        Account account = accountService.findAccountByUsername(username);
-        accountService.deposit(account, amount);
-        return ResponseEntity.ok("Deposit successful");
+    public void deposit(Account account, BigDecimal amount) {
+        account.setBalance(account.getBalance().add(amount));
+        accountRepository.save(account);
+
+        Transaction transaction = new Transaction(
+                amount,
+                "Deposit",
+                LocalDateTime.now(),
+                account
+        );
+        transactionRepository.save(transaction);
     }
 
-    @PostMapping("/withdraw")
-    public ResponseEntity<String> withdraw(@RequestParam BigDecimal amount) {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        Account account = accountService.findAccountByUsername(username);
-
-        try {
-            accountService.withdraw(account, amount);
-            return ResponseEntity.ok("Withdrawal successful");
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+    public void withdraw(Account account, BigDecimal amount) {
+        if (account.getBalance().compareTo(amount) < 0) {
+            throw new InsufficientFundsException("Insufficient balance for withdrawal");
         }
+
+        account.setBalance(account.getBalance().subtract(amount));
+        accountRepository.save(account);
+
+        Transaction transaction = new Transaction(
+                amount,
+                "Withdrawal",
+                LocalDateTime.now(),
+                account
+        );
+        transactionRepository.save(transaction);
     }
 
-    @GetMapping("/transactions")
-    public ResponseEntity<List<Transaction>> transactionHistory() {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        Account account = accountService.findAccountByUsername(username);
-        List<Transaction> transactions = accountService.getTransactionHistory(account);
-        return ResponseEntity.ok(transactions);
+    public List<Transaction> getTransactionHistory(Account account) {
+        return transactionRepository.findByAccountId(account.getId());
     }
 
-    @PostMapping("/transfer")
-    public ResponseEntity<String> transferAmount(@RequestParam String toUsername, @RequestParam BigDecimal amount) {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        Account fromAccount = accountService.findAccountByUsername(username);
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        Account account = accountRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("Username not found: " + username));
 
-        try {
-            accountService.transferAmount(fromAccount, toUsername, amount);
-            return ResponseEntity.ok("Transfer successful");
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+        return new Account(
+                account.getUsername(),
+                account.getPassword(),
+                account.getBalance(),
+                account.getTransactions(),
+                authorities());
+    }
+
+    public Collection<? extends GrantedAuthority> authorities() {
+        return Arrays.asList(new SimpleGrantedAuthority("USER"));
+    }
+
+    public void transferAmount(Account fromAccount, String toUsername, BigDecimal amount) {
+        if (fromAccount.getBalance().compareTo(amount) < 0) {
+            throw new InsufficientFundsException("Insufficient funds to transfer");
         }
+
+        Account toAccount = accountRepository.findByUsername(toUsername)
+                .orElseThrow(() -> new AccountNotFoundException("Recipient account not found: " + toUsername));
+
+        fromAccount.setBalance(fromAccount.getBalance().subtract(amount));
+        accountRepository.save(fromAccount);
+
+        toAccount.setBalance(toAccount.getBalance().add(amount));
+        accountRepository.save(toAccount);
+
+        Transaction debitTransaction = new Transaction(
+                amount,
+                "Transfer Out to " + toAccount.getUsername(),
+                LocalDateTime.now(),
+                fromAccount
+        );
+        transactionRepository.save(debitTransaction);
+
+        Transaction creditTransaction = new Transaction(
+                amount,
+                "Transfer In from " + fromAccount.getUsername(),
+                LocalDateTime.now(),
+                toAccount
+        );
+        transactionRepository.save(creditTransaction);
     }
 }
