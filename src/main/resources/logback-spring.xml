@@ -17,7 +17,6 @@
         <file>${LOG_FILE}</file>
 
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <!-- Log file name pattern: daily + index if multiple -->
             <fileNamePattern>${LOG_PATH}/bankapp-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
             <timeBasedFileNamingAndTriggeringPolicy
                 class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
@@ -32,13 +31,27 @@
         </encoder>
     </appender>
 
+    <!-- Logstash appender (structured JSON logs) -->
+    <appender name="LOGSTASH" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/bankapp-json.log</file>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/bankapp-json-%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>1GB</totalSizeCap>
+        </rollingPolicy>
+
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder" />
+    </appender>
+
     <!-- Log root level -->
     <root level="INFO">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="FILE"/>
+        <appender-ref ref="LOGSTASH"/>
     </root>
 
     <!-- Log your package at DEBUG level -->
-    <logger name=":com.example.bankapp" level="DEBUG"/>
+    <logger name="com.example.bankapp" level="DEBUG"/>
 
 </configuration>
