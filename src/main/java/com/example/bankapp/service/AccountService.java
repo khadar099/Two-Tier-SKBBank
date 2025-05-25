@@ -1,5 +1,8 @@
 package com.example.bankapp.service;
 
+import com.example.bankapp.exception.AccountNotFoundException;
+import com.example.bankapp.exception.InsufficientFundsException;
+import com.example.bankapp.exception.UsernameAlreadyExistsException;
 import com.example.bankapp.model.Account;
 import com.example.bankapp.model.Transaction;
 import com.example.bankapp.repository.AccountRepository;
@@ -32,12 +35,13 @@ public class AccountService implements UserDetailsService {
     private TransactionRepository transactionRepository;
 
     public Account findAccountByUsername(String username) {
-        return accountRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("Account not found"));
+        return accountRepository.findByUsername(username)
+                .orElseThrow(() -> new AccountNotFoundException("Account not found for username: " + username));
     }
 
     public Account registerAccount(String username, String password) {
         if (accountRepository.findByUsername(username).isPresent()) {
-            throw new RuntimeException("Username already exists");
+            throw new UsernameAlreadyExistsException("Username already exists: " + username);
         }
 
         Account account = new Account();
@@ -46,7 +50,6 @@ public class AccountService implements UserDetailsService {
         account.setBalance(BigDecimal.ZERO); // Initial balance set to 0
         return accountRepository.save(account);
     }
-
 
     public void deposit(Account account, BigDecimal amount) {
         account.setBalance(account.getBalance().add(amount));
@@ -63,8 +66,9 @@ public class AccountService implements UserDetailsService {
 
     public void withdraw(Account account, BigDecimal amount) {
         if (account.getBalance().compareTo(amount) < 0) {
-            throw new RuntimeException("Insufficient funds");
+            throw new InsufficientFundsException("Insufficient balance for withdrawal");
         }
+
         account.setBalance(account.getBalance().subtract(amount));
         accountRepository.save(account);
 
@@ -83,11 +87,9 @@ public class AccountService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        Account account = accountRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("Username not found: " + username));
 
-        Account account = findAccountByUsername(username);
-        if (account == null) {
-            throw new UsernameNotFoundException("Username or Password not found");
-        }
         return new Account(
                 account.getUsername(),
                 account.getPassword(),
@@ -102,21 +104,18 @@ public class AccountService implements UserDetailsService {
 
     public void transferAmount(Account fromAccount, String toUsername, BigDecimal amount) {
         if (fromAccount.getBalance().compareTo(amount) < 0) {
-            throw new RuntimeException("Insufficient funds");
+            throw new InsufficientFundsException("Insufficient funds to transfer");
         }
 
         Account toAccount = accountRepository.findByUsername(toUsername)
-                .orElseThrow(() -> new RuntimeException("Recipient account not found"));
+                .orElseThrow(() -> new AccountNotFoundException("Recipient account not found: " + toUsername));
 
-        // Deduct from sender's account
         fromAccount.setBalance(fromAccount.getBalance().subtract(amount));
         accountRepository.save(fromAccount);
 
-        // Add to recipient's account
         toAccount.setBalance(toAccount.getBalance().add(amount));
         accountRepository.save(toAccount);
 
-        // Create transaction records for both accounts
         Transaction debitTransaction = new Transaction(
                 amount,
                 "Transfer Out to " + toAccount.getUsername(),
@@ -133,5 +132,4 @@ public class AccountService implements UserDetailsService {
         );
         transactionRepository.save(creditTransaction);
     }
-
 }
