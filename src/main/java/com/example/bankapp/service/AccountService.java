@@ -1,5 +1,7 @@
 package com.example.bankapp.service;
 
+import static net.logstash.logback.argument.StructuredArguments.kv;
+
 import com.example.bankapp.model.Account;
 import com.example.bankapp.model.Transaction;
 import com.example.bankapp.repository.AccountRepository;
@@ -50,42 +52,82 @@ public class AccountService implements UserDetailsService {
         account.setBalance(BigDecimal.ZERO); // Initial balance set to 0
         Account savedAccount = accountRepository.save(account);
 
-        transactionLogger.info("Registered new account with username: {}", username);
+        transactionLogger.info("Registered new account",
+                kv("user", username),
+                kv("status", "success"));
 
         return savedAccount;
     }
 
     public void deposit(Account account, BigDecimal amount) {
-        account.setBalance(account.getBalance().add(amount));
-        accountRepository.save(account);
+        try {
+            account.setBalance(account.getBalance().add(amount));
+            accountRepository.save(account);
 
-        Transaction transaction = new Transaction(
-                amount,
-                "Deposit",
-                LocalDateTime.now(),
-                account
-        );
-        transactionRepository.save(transaction);
+            Transaction transaction = new Transaction(
+                    amount,
+                    "Deposit",
+                    LocalDateTime.now(),
+                    account
+            );
+            transactionRepository.save(transaction);
 
-        transactionLogger.info("Deposit of {} made for user {}", amount, account.getUsername());
+            transactionLogger.info("Deposit successful",
+                    kv("user", account.getUsername()),
+                    kv("amount", amount),
+                    kv("transaction", "deposit"),
+                    kv("status", "success"));
+
+        } catch (Exception e) {
+            transactionLogger.error("Deposit failed",
+                    kv("user", account.getUsername()),
+                    kv("amount", amount),
+                    kv("transaction", "deposit"),
+                    kv("status", "failed"),
+                    kv("error", e.getMessage()));
+            throw e;
+        }
     }
 
     public void withdraw(Account account, BigDecimal amount) {
-        if (account.getBalance().compareTo(amount) < 0) {
-            throw new RuntimeException("Insufficient funds");
+        try {
+            if (account.getBalance().compareTo(amount) < 0) {
+                transactionLogger.warn("Withdrawal failed due to insufficient funds",
+                        kv("user", account.getUsername()),
+                        kv("amount", amount),
+                        kv("transaction", "withdrawal"),
+                        kv("status", "failed"));
+                throw new RuntimeException("Insufficient funds");
+            }
+
+            account.setBalance(account.getBalance().subtract(amount));
+            accountRepository.save(account);
+
+            Transaction transaction = new Transaction(
+                    amount,
+                    "Withdrawal",
+                    LocalDateTime.now(),
+                    account
+            );
+            transactionRepository.save(transaction);
+
+            transactionLogger.info("Withdrawal successful",
+                    kv("user", account.getUsername()),
+                    kv("amount", amount),
+                    kv("transaction", "withdrawal"),
+                    kv("status", "success"));
+
+        } catch (Exception e) {
+            if (!e.getMessage().equals("Insufficient funds")) {
+                transactionLogger.error("Withdrawal failed",
+                        kv("user", account.getUsername()),
+                        kv("amount", amount),
+                        kv("transaction", "withdrawal"),
+                        kv("status", "failed"),
+                        kv("error", e.getMessage()));
+            }
+            throw e;
         }
-        account.setBalance(account.getBalance().subtract(amount));
-        accountRepository.save(account);
-
-        Transaction transaction = new Transaction(
-                amount,
-                "Withdrawal",
-                LocalDateTime.now(),
-                account
-        );
-        transactionRepository.save(transaction);
-
-        transactionLogger.info("Withdrawal of {} made for user {}", amount, account.getUsername());
     }
 
     public List<Transaction> getTransactionHistory(Account account) {
@@ -112,39 +154,61 @@ public class AccountService implements UserDetailsService {
     }
 
     public void transferAmount(Account fromAccount, String toUsername, BigDecimal amount) {
-        if (fromAccount.getBalance().compareTo(amount) < 0) {
-            throw new RuntimeException("Insufficient funds");
+        try {
+            if (fromAccount.getBalance().compareTo(amount) < 0) {
+                transactionLogger.warn("Transfer failed due to insufficient funds",
+                        kv("fromUser", fromAccount.getUsername()),
+                        kv("toUser", toUsername),
+                        kv("amount", amount),
+                        kv("transaction", "transfer"),
+                        kv("status", "failed"));
+                throw new RuntimeException("Insufficient funds");
+            }
+
+            Account toAccount = accountRepository.findByUsername(toUsername)
+                    .orElseThrow(() -> new RuntimeException("Recipient account not found"));
+
+            // Deduct from sender's account
+            fromAccount.setBalance(fromAccount.getBalance().subtract(amount));
+            accountRepository.save(fromAccount);
+
+            // Add to recipient's account
+            toAccount.setBalance(toAccount.getBalance().add(amount));
+            accountRepository.save(toAccount);
+
+            // Create transaction records for both accounts
+            Transaction debitTransaction = new Transaction(
+                    amount,
+                    "Transfer Out to " + toAccount.getUsername(),
+                    LocalDateTime.now(),
+                    fromAccount
+            );
+            transactionRepository.save(debitTransaction);
+
+            Transaction creditTransaction = new Transaction(
+                    amount,
+                    "Transfer In from " + fromAccount.getUsername(),
+                    LocalDateTime.now(),
+                    toAccount
+            );
+            transactionRepository.save(creditTransaction);
+
+            transactionLogger.info("Transfer successful",
+                    kv("fromUser", fromAccount.getUsername()),
+                    kv("toUser", toUsername),
+                    kv("amount", amount),
+                    kv("transaction", "transfer"),
+                    kv("status", "success"));
+
+        } catch (Exception e) {
+            transactionLogger.error("Transfer failed",
+                    kv("fromUser", fromAccount.getUsername()),
+                    kv("toUser", toUsername),
+                    kv("amount", amount),
+                    kv("transaction", "transfer"),
+                    kv("status", "failed"),
+                    kv("error", e.getMessage()));
+            throw e;
         }
-
-        Account toAccount = accountRepository.findByUsername(toUsername)
-                .orElseThrow(() -> new RuntimeException("Recipient account not found"));
-
-        // Deduct from sender's account
-        fromAccount.setBalance(fromAccount.getBalance().subtract(amount));
-        accountRepository.save(fromAccount);
-
-        // Add to recipient's account
-        toAccount.setBalance(toAccount.getBalance().add(amount));
-        accountRepository.save(toAccount);
-
-        // Create transaction records for both accounts
-        Transaction debitTransaction = new Transaction(
-                amount,
-                "Transfer Out to " + toAccount.getUsername(),
-                LocalDateTime.now(),
-                fromAccount
-        );
-        transactionRepository.save(debitTransaction);
-
-        Transaction creditTransaction = new Transaction(
-                amount,
-                "Transfer In from " + fromAccount.getUsername(),
-                LocalDateTime.now(),
-                toAccount
-        );
-        transactionRepository.save(creditTransaction);
-
-        transactionLogger.info("Transferred {} from user {} to user {}", amount, fromAccount.getUsername(), toUsername);
     }
-
 }
