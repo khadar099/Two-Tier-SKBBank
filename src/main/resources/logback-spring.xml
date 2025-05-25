@@ -1,44 +1,55 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<configuration scan="true">
+<configuration>
 
-    <property name="LOG_PATH" value="/usr/src/app/logs" />
-    <property name="LOG_FILE" value="${LOG_PATH}/bankapp-json.log" />
+    <!-- JSON Encoder using Logstash format -->
+    <include resource="org/springframework/boot/logging/logback/base.xml"/>
 
-    <!-- Console Appender -->
-    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder>
-            <pattern>%d{dd-MM-yyyy HH:mm} %-5level [%thread] %logger{36} - %msg%n</pattern>
-        </encoder>
-    </appender>
+    <appender name="JSON-FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>bankapp-json.log</file>
 
-    <!-- JSON Rolling File Appender -->
-    <appender name="LOGSTASH" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${LOG_FILE}</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${LOG_PATH}/bankapp-json-%d{yyyy-MM-dd}.log</fileNamePattern>
+            <fileNamePattern>bankapp-json-%d{yyyy-MM-dd}.log</fileNamePattern>
             <maxHistory>30</maxHistory>
-            <totalSizeCap>1GB</totalSizeCap>
         </rollingPolicy>
-        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
-            <timeStampPattern>dd-MM-yyyy HH:mm</timeStampPattern>
+
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <timestamp>
+                    <fieldName>@timestamp</fieldName>
+                </timestamp>
+                <version/>
+                <message/>
+                <loggerName>
+                    <fieldName>logger_name</fieldName>
+                </loggerName>
+                <threadName>
+                    <fieldName>thread_name</fieldName>
+                </threadName>
+                <logLevel>
+                    <fieldName>level</fieldName>
+                </logLevel>
+                <logLevelValue>
+                    <fieldName>level_value</fieldName>
+                </logLevelValue>
+            </providers>
         </encoder>
     </appender>
 
-    <!-- Suppress noise -->
-    <logger name="org.hibernate" level="WARN" />
-    <logger name="org.springframework" level="WARN" />
-    <logger name="org.apache" level="WARN" />
-    <logger name="com.zaxxer.hikari" level="WARN" />
+    <!-- Suppress all framework logs -->
+    <logger name="org.springframework" level="WARN"/>
+    <logger name="org.hibernate" level="WARN"/>
+    <logger name="com.zaxxer.hikari" level="WARN"/>
+    <logger name="org.apache" level="WARN"/>
+    <logger name="org.springframework.security" level="WARN"/>
+    <logger name="org.springframework.web.servlet" level="WARN"/>
+    <logger name="org.springframework.boot.autoconfigure.orm.jpa" level="WARN"/>
+    <logger name="org.springframework.orm.jpa" level="WARN"/>
 
-    <!-- Only app logs go to file -->
-    <logger name="com.example.bankapp" level="DEBUG" additivity="false">
-        <appender-ref ref="LOGSTASH" />
-        <appender-ref ref="CONSOLE" />
-    </logger>
+    <!-- Your application logs -->
+    <logger name="com.example.bankapp" level="INFO"/>
 
-    <!-- Root: only to console -->
-    <root level="INFO">
-        <appender-ref ref="CONSOLE" />
+    <root level="WARN">
+        <appender-ref ref="JSON-FILE"/>
     </root>
 
 </configuration>
