@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration scan="true">
 
-    <!-- Log file location -->
     <property name="LOG_PATH" value="/usr/src/app/logs" />
     <property name="LOG_FILE" value="${LOG_PATH}/bankapp-json.log" />
 
@@ -15,34 +14,31 @@
     <!-- JSON Rolling File Appender -->
     <appender name="LOGSTASH" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${LOG_FILE}</file>
-
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <fileNamePattern>${LOG_PATH}/bankapp-json-%d{yyyy-MM-dd}.log</fileNamePattern>
             <maxHistory>30</maxHistory>
             <totalSizeCap>1GB</totalSizeCap>
         </rollingPolicy>
-
         <encoder class="net.logstash.logback.encoder.LogstashEncoder">
             <timeStampPattern>dd-MM-yyyy HH:mm</timeStampPattern>
         </encoder>
     </appender>
 
-    <!-- Suppress noise from 3rd party libs -->
+    <!-- Suppress noise -->
     <logger name="org.hibernate" level="WARN" />
     <logger name="org.springframework" level="WARN" />
     <logger name="org.apache" level="WARN" />
     <logger name="com.zaxxer.hikari" level="WARN" />
 
-    <!-- Application logs -->
+    <!-- Only app logs go to file -->
     <logger name="com.example.bankapp" level="DEBUG" additivity="false">
-        <appender-ref ref="CONSOLE" />
         <appender-ref ref="LOGSTASH" />
+        <appender-ref ref="CONSOLE" />
     </logger>
 
-    <!-- Root logger -->
+    <!-- Root: only to console -->
     <root level="INFO">
         <appender-ref ref="CONSOLE" />
-        <appender-ref ref="LOGSTASH" />
     </root>
 
 </configuration>
