@@ -1,31 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration scan="true">
 
-    <!-- Define property for log path -->
+    <!-- Log directory and file -->
     <property name="LOG_PATH" value="/usr/src/app/logs" />
     <property name="LOG_FILE" value="${LOG_PATH}/bankapp-json.log" />
 
-    <!-- Console appender (optional, for dev/debug) -->
+    <!-- Console logging (for stdout) -->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss} %-5level [%thread] %logger{36} - %msg%n</pattern>
+            <pattern>%d{dd-MM-yyyy HH:mm} %-5level [%thread] %logger{36} - %msg%n</pattern>
         </encoder>
     </appender>
 
-    <!-- JSON Rolling file appender -->
+    <!-- JSON file appender with rolling policy -->
     <appender name="LOGSTASH" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${LOG_FILE}</file>
-
+        
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- Daily log file with date -->
             <fileNamePattern>${LOG_PATH}/bankapp-json-%d{yyyy-MM-dd}.log</fileNamePattern>
             <maxHistory>30</maxHistory>
             <totalSizeCap>1GB</totalSizeCap>
         </rollingPolicy>
 
-        <encoder class="net.logstash.logback.encoder.LogstashEncoder" />
+        <!-- JSON encoder with custom timestamp format -->
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <timeStampPattern>dd-MM-yyyy HH:mm</timeStampPattern>
+        </encoder>
     </appender>
 
-    <!-- Logger for your application package -->
+    <!-- Application-specific logger -->
     <logger name="com.example.bankapp" level="DEBUG" additivity="false">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="LOGSTASH"/>
