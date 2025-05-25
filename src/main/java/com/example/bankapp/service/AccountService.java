@@ -12,6 +12,8 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -21,6 +23,8 @@ import java.util.List;
 
 @Service
 public class AccountService implements UserDetailsService {
+
+    private static final Logger transactionLogger = LoggerFactory.getLogger("transaction-logger");
 
     @Autowired
     PasswordEncoder passwordEncoder;
@@ -44,9 +48,12 @@ public class AccountService implements UserDetailsService {
         account.setUsername(username);
         account.setPassword(passwordEncoder.encode(password)); // Encrypt password
         account.setBalance(BigDecimal.ZERO); // Initial balance set to 0
-        return accountRepository.save(account);
-    }
+        Account savedAccount = accountRepository.save(account);
 
+        transactionLogger.info("Registered new account with username: {}", username);
+
+        return savedAccount;
+    }
 
     public void deposit(Account account, BigDecimal amount) {
         account.setBalance(account.getBalance().add(amount));
@@ -59,6 +66,8 @@ public class AccountService implements UserDetailsService {
                 account
         );
         transactionRepository.save(transaction);
+
+        transactionLogger.info("Deposit of {} made for user {}", amount, account.getUsername());
     }
 
     public void withdraw(Account account, BigDecimal amount) {
@@ -75,6 +84,8 @@ public class AccountService implements UserDetailsService {
                 account
         );
         transactionRepository.save(transaction);
+
+        transactionLogger.info("Withdrawal of {} made for user {}", amount, account.getUsername());
     }
 
     public List<Transaction> getTransactionHistory(Account account) {
@@ -132,6 +143,8 @@ public class AccountService implements UserDetailsService {
                 toAccount
         );
         transactionRepository.save(creditTransaction);
+
+        transactionLogger.info("Transferred {} from user {} to user {}", amount, fromAccount.getUsername(), toUsername);
     }
 
 }
