@@ -1,5 +1,6 @@
 package com.example.bankapp.service;
 
+import static net.logstash.logback.argument.StructuredArguments.kv;
 import com.example.bankapp.model.Account;
 import com.example.bankapp.model.Transaction;
 import com.example.bankapp.repository.AccountRepository;
