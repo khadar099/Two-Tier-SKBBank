@@ -1,35 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
 
-    <!-- JSON file appender for transaction-logger -->
     <appender name="JSON_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>/logs/skbbank.json</file>
+        <file>/usr/src/app/logs/skbbank.json</file>
 
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <!-- Rotate daily -->
-            <fileNamePattern>/logs/skbbank-%d{yyyy-MM-dd}.json</fileNamePattern>
-            <!-- Keep 7 days -->
+            <!-- Log file rotated daily -->
+            <fileNamePattern>/usr/src/app/logs/skbbank-%d{yyyy-MM-dd}.json</fileNamePattern>
+            <!-- Keep logs for 7 days -->
             <maxHistory>7</maxHistory>
         </rollingPolicy>
 
         <encoder class="net.logstash.logback.encoder.LogstashEncoder" />
     </appender>
 
-    <!-- Console appender for easy debugging -->
-    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder>
-            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
-        </encoder>
-    </appender>
-
-    <!-- Logger for transaction logs only -->
+    <!-- Capture only logs from 'transaction-logger' -->
     <logger name="transaction-logger" level="INFO" additivity="false">
         <appender-ref ref="JSON_FILE" />
     </logger>
 
-    <!-- Root logger sends INFO+ logs to console -->
-    <root level="INFO">
-        <appender-ref ref="STDOUT" />
-    </root>
+    <!-- Root logger for all other logs, no JSON output -->
+    <root level="WARN" />
 
 </configuration>
