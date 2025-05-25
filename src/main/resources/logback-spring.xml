@@ -1,15 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<configuration>
+<configuration scan="false">
 
-    <!-- JSON Encoder using Logstash format -->
-    <include resource="org/springframework/boot/logging/logback/base.xml"/>
-
+    <!-- JSON encoder -->
     <appender name="JSON-FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>bankapp-json.log</file>
+        <file>bankapp-json.log</file> <!-- live file -->
 
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <fileNamePattern>bankapp-json-%d{yyyy-MM-dd}.log</fileNamePattern>
-            <maxHistory>30</maxHistory>
+            <maxHistory>7</maxHistory>
+            <cleanHistoryOnStart>true</cleanHistoryOnStart>
         </rollingPolicy>
 
         <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
@@ -35,21 +34,19 @@
         </encoder>
     </appender>
 
-    <!-- Suppress all framework logs -->
-    <logger name="org.springframework" level="WARN"/>
-    <logger name="org.hibernate" level="WARN"/>
-    <logger name="com.zaxxer.hikari" level="WARN"/>
-    <logger name="org.apache" level="WARN"/>
-    <logger name="org.springframework.security" level="WARN"/>
-    <logger name="org.springframework.web.servlet" level="WARN"/>
-    <logger name="org.springframework.boot.autoconfigure.orm.jpa" level="WARN"/>
-    <logger name="org.springframework.orm.jpa" level="WARN"/>
+    <!-- ✅ Only log com.example.bankapp to JSON-FILE -->
+    <logger name="com.example.bankapp" level="INFO" additivity="false">
+        <appender-ref ref="JSON-FILE" />
+    </logger>
 
-    <!-- Your application logs -->
-    <logger name="com.example.bankapp" level="INFO"/>
+    <!-- ❌ Suppress unwanted logs (Spring, Hibernate, etc.) -->
+    <logger name="org.springframework" level="OFF" />
+    <logger name="org.hibernate" level="OFF" />
+    <logger name="org.apache" level="OFF" />
+    <logger name="com.zaxxer.hikari" level="OFF" />
+    <logger name="org.springframework.security" level="OFF" />
+    <logger name="org.springframework.boot" level="OFF" />
 
-    <root level="WARN">
-        <appender-ref ref="JSON-FILE"/>
-    </root>
-
+    <!-- 🚫 No appender for root to prevent all other logs -->
+    <root level="OFF" />
 </configuration>
